@@ -162,6 +162,43 @@ impl RSA {
         }
     }
 
+    // pub fn RSA_private_decrypt(flen: c_int, from: *const u8, to: *mut u8, k: *mut RSA,
+    //                            pad: c_int) -> c_int;
+    // pub fn RSA_public_encrypt(flen: c_int, from: *const u8, to: *mut u8, k: *mut RSA,
+    //                           pad: c_int) -> c_int;
+
+    pub fn private_decrypt(&self, from: &[u8]) -> Result<Vec<u8>, ErrorStack> {
+        assert!(self.d().is_some(), "private components missing");
+        let k_len = self.size().expect("RSA missing an n");
+        let mut to: Vec<u8> = vec![0; k_len as usize];
+
+        unsafe {
+            let enc_len = try_ssl_size!(ffi::RSA_private_decrypt(from.len() as i32,
+                                   from.as_ptr(),
+                                   to.as_mut_ptr(),
+                                   self.0,
+                                   ffi::RSA_PKCS1_PADDING));
+           to.truncate(enc_len as usize);
+           Ok(to)
+        }
+    }
+
+    pub fn public_encrypt(&self, from: &[u8]) -> Result<Vec<u8>, ErrorStack> {
+        let k_len = self.size().expect("RSA missing an n");
+        let mut to:Vec<u8> = vec![0; k_len as usize];
+
+        unsafe {
+            let enc_len = try_ssl_size!(ffi::RSA_public_encrypt(from.len() as c_int,
+                                   from.as_ptr(),
+                                   to.as_mut_ptr(),
+                                   self.0,
+                                   ffi::RSA_PKCS1_PADDING));
+           assert!(enc_len as u32 == k_len);
+
+           Ok(to)
+        }
+    }
+
     pub fn sign(&self, hash: hash::Type, message: &[u8]) -> Result<Vec<u8>, ErrorStack> {
         assert!(self.d().is_some(), "private components missing");
         let k_len = self.size().expect("RSA missing an n");
@@ -334,5 +371,24 @@ mod test {
         }).unwrap();
 
         assert!(password_queried);
+    }
+
+    #[test]
+    pub fn test_public_encrypt() {
+        let key = include_bytes!("../../test/rsa.pem.pub");
+        let public_key = RSA::public_key_from_pem(key).unwrap();
+
+        let original_data: Vec<u8> = "This is test".to_string().into_bytes();
+        let result = public_key.public_encrypt(&original_data).unwrap();
+println!("{:?}", original_data);
+println!("{:?}", result);
+        assert_eq!(result.len(), 256);
+
+        let pkey = include_bytes!("../../test/rsa.pem");
+        let private_key = RSA::private_key_from_pem(pkey).unwrap();
+        let dec_result = private_key.private_decrypt(&result).unwrap();
+
+       assert_eq!(dec_result, original_data);
+    // assert!(false);
     }
 }
