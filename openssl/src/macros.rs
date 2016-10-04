@@ -72,5 +72,11 @@ macro_rules! lift_ssl {
 /// Lifts current SSL error code into Result<(), Error>
 /// if SSL returned -1 (default size error indication)
 macro_rules! lift_ssl_size {
-    ($e:expr) => (lift_ssl_if!($e == -1))
+    ($e:expr) => ( {
+        if $e == -1 {
+            Err(::error::ErrorStack::get().into())
+        } else {
+            Ok($e)
+        }
+    })
 }
