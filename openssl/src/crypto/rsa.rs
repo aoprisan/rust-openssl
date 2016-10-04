@@ -13,6 +13,9 @@ use crypto::util::{CallbackState, invoke_passwd_cb};
 
 pub struct RSA(*mut ffi::RSA);
 
+pub const RSA_PKCS1_PADDING: c_int = 1;
+
+
 impl Drop for RSA {
     fn drop(&mut self) {
         unsafe {
@@ -167,6 +170,7 @@ impl RSA {
     // pub fn RSA_public_encrypt(flen: c_int, from: *const u8, to: *mut u8, k: *mut RSA,
     //                           pad: c_int) -> c_int;
 
+
     pub fn private_decrypt(&self, from: &[u8]) -> Result<Vec<u8>, ErrorStack> {
         assert!(self.d().is_some(), "private components missing");
         let k_len = self.size().expect("RSA missing an n");
@@ -177,7 +181,7 @@ impl RSA {
                                    from.as_ptr(),
                                    to.as_mut_ptr(),
                                    self.0,
-                                   ffi::RSA_PKCS1_PADDING));
+                                   RSA_PKCS1_PADDING));
            to.truncate(enc_len as usize);
            Ok(to)
         }
@@ -192,7 +196,7 @@ impl RSA {
                                    from.as_ptr(),
                                    to.as_mut_ptr(),
                                    self.0,
-                                   ffi::RSA_PKCS1_PADDING));
+                                   RSA_PKCS1_PADDING));
            assert!(enc_len as u32 == k_len);
 
            Ok(to)

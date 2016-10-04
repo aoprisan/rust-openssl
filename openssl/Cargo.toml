@@ -39,7 +39,7 @@ dh_from_params = ["c_helpers"]
 bitflags = "0.7"
 lazy_static = "0.2"
 libc = "0.2"
-openssl-sys = { version = "0.7.17", path = "../openssl-sys" }
+openssl-sys = "0.7.17"#{ version = "0.7.17", path = "../openssl-sys" }
 
 [build-dependencies]
 gcc = { version = "0.3", optional = true }
