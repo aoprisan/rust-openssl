@@ -35,7 +35,7 @@ macro_rules! try_ssl_null{
 
 /// Shortcut return with SSL error if last error result is -1
 /// (default for size)
-macro_rules! try_ssl_size{
+macro_rules! try_ssl_returns_size{
     ($e:expr) => (
         if $e == -1 {
             return Err(::error::ErrorStack::get().into())
@@ -71,7 +71,7 @@ macro_rules! lift_ssl {
 
 /// Lifts current SSL error code into Result<(), Error>
 /// if SSL returned -1 (default size error indication)
-macro_rules! lift_ssl_size {
+macro_rules! lift_ssl_returns_size {
     ($e:expr) => ( {
         if $e == -1 {
             Err(::error::ErrorStack::get().into())
